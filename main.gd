@@ -9,8 +9,8 @@ class_name Main
 @onready var ctrl_left: XRController3D = $XROrigin3D/XRController3D_left
 
 @onready var screen_rect_mesh = $ActiveScreenRect
-@onready var cursor_left = $CursorLeft
-@onready var cursor_right = $CursorRight
+@onready var cursor_left: MeshInstance3D = $CursorLeft
+@onready var cursor_right: MeshInstance3D = $CursorRight
 
 static var screens : Array[Rectangle3D] = [] 
 
@@ -142,8 +142,10 @@ func _process_controller(ctrl: XRController3D, hand_id: String, cursor: MeshInst
 		if intersect.size() > 0:
 			if intersect[1] < best[1]:
 				best = intersect
+				cursor_left.global_position = s.bottomLeft
+				cursor_left.visible = true
 				
-	var msg = "MR DEBUG Lightgun_hit "+hand_id+" "
+	var msg = "LightgunData "+hand_id+" "
 	if best[1] < INF:
 		msg += "%.5f,%.5f " % [best[2].x, best[2].y]
 		cursor.global_position = best[0]

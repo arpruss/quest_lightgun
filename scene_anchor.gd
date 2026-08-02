@@ -58,6 +58,7 @@ func _screen_rectangles(entity: OpenXRFbSpatialEntity) -> Array:
 			axes = [0,1,2]
 		else:
 			axes = [0,2,1]
+	print("MR DEBUG ",axes," ",bb.size)
 
 	var upSign := 1
 	var upVector := Vector3()
@@ -65,7 +66,7 @@ func _screen_rectangles(entity: OpenXRFbSpatialEntity) -> Array:
 		upSign = -1
 	upVector[axes[1]] = upSign * bb.size[axes[1]]
 	const outSign := -1
-	var rightSign := upSign * outSign
+	var rightSign := -upSign * outSign
 	var rightVector := Vector3()
 	if (axes[1]+1) % 3 == axes[2]:
 		rightSign = -rightSign 
