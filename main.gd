@@ -48,11 +48,13 @@ func _ready():
 	mat_blue.albedo_color = Color.BLUE
 	mat_blue.shading_mode = StandardMaterial3D.SHADING_MODE_UNSHADED
 	cursor_left.material_override = mat_blue
+	cursor_left.visible = false
 	
 	mat_red = StandardMaterial3D.new()
 	mat_red.albedo_color = Color.RED
 	mat_red.shading_mode = StandardMaterial3D.SHADING_MODE_UNSHADED
 	cursor_right.material_override = mat_red
+	cursor_right.visible = false
 
 	# Activate MR immediately on start
 	print("MR DEBUG: hello")
@@ -142,7 +144,7 @@ func _process_controller(ctrl: XRController3D, hand_id: String, cursor: MeshInst
 				best = intersect
 				
 	var msg = "MR DEBUG Lightgun_hit "+hand_id+" "
-	if best[1] < INF and best[2].x >=0 and best[2].x <= 1 and best[2].y >= 0 and best[2].y <= 1:
+	if best[1] < INF:
 		msg += "%.5f,%.5f " % [best[2].x, best[2].y]
 		cursor.global_position = best[0]
 		cursor.visible = true

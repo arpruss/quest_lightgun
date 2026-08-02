@@ -9,6 +9,7 @@ var normal : Vector3
 @export var diagonal : float
 var upwardLengthSquared : float
 var rightwardLengthSquared : float
+const margin := 0.2
 
 func _ready() -> void:
 	print("MR DEBUG Rectangle3D()",bottomLeft,rightward,upward)
@@ -24,7 +25,7 @@ func _ready() -> void:
 	var mat = StandardMaterial3D.new()
 	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-	mat.cull_mode = BaseMaterial3D.CULL_DISABLED
+	mat.cull_mode = BaseMaterial3D.CULL_BACK
 	mat.albedo_color = rect_color
 
 	var imm_mesh = ImmediateMesh.new()
@@ -45,7 +46,7 @@ func _ready() -> void:
 func intersectRay(base: Vector3, dir: Vector3) -> Array:
 	# returns [position,distance,[x,y]] or []
 	var normal_dot_dir := normal.dot(dir)
-	if is_zero_approx(normal_dot_dir):
+	if is_zero_approx(normal_dot_dir) or normal_dot_dir <= 0:
 		return []
 	var t := (bottomLeft - base).dot(normal) / normal_dot_dir
 	if t < 0:
@@ -53,7 +54,11 @@ func intersectRay(base: Vector3, dir: Vector3) -> Array:
 	var pos := base + t * dir
 	var delta := pos - bottomLeft
 	var x := delta.dot(rightward)/rightwardLengthSquared
+	if x < -margin or x > 1+margin:
+		return []
 	var y := delta.dot(upward)/upwardLengthSquared
+	if y < -margin or y > 1+margin:
+		return []
 	return [pos, t*dir.length(), Vector2(x,y)]
 	
 	
