@@ -25,19 +25,19 @@ func _ready() -> void:
 	var mat = StandardMaterial3D.new()
 	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-	mat.cull_mode = BaseMaterial3D.CULL_DISABLED #BaseMaterial3D.CULL_BACK
+	mat.cull_mode = BaseMaterial3D.CULL_BACK #BaseMaterial3D.CULL_BACK
 	mat.albedo_color = rect_color
 
 	var imm_mesh = ImmediateMesh.new()
 	imm_mesh.surface_begin(Mesh.PRIMITIVE_TRIANGLES, mat)
 
-	imm_mesh.surface_add_vertex(v0)
+	imm_mesh.surface_add_vertex(v2)
 	imm_mesh.surface_add_vertex(v1)
-	imm_mesh.surface_add_vertex(v2)
-
 	imm_mesh.surface_add_vertex(v0)
-	imm_mesh.surface_add_vertex(v2)
+
 	imm_mesh.surface_add_vertex(v3)
+	imm_mesh.surface_add_vertex(v2)
+	imm_mesh.surface_add_vertex(v0)
 
 	imm_mesh.surface_end()
 	

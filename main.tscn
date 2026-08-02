@@ -29,6 +29,7 @@ show_when_tracked = true
 
 [node name="RayLine" type="MeshInstance3D" parent="XROrigin3D/XRController3D_left" unique_id=2113522849]
 transform = Transform3D(1, 0, 0, 0, -4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, -0.5)
+visible = false
 mesh = SubResource("CylinderMesh_7dm0k")
 
 [node name="XRController3D_right" type="XRController3D" parent="XROrigin3D" unique_id=1408941687]
@@ -49,6 +50,6 @@ mesh = SubResource("SphereMesh_0xm2m")
 [node name="CursorRight" type="MeshInstance3D" parent="." unique_id=431031315]
 mesh = SubResource("SphereMesh_h2yge")
 
-[connection signal="openxr_fb_scene_anchor_created" from="XROrigin3D/OpenXRFbSceneManager" to="." method="_on_scene_anchor_created"]
+[connection signal="openxr_fb_scene_anchor_created" from="XROrigin3D/OpenXRFbSceneManager" to="." method="_scene_anchor_created"]
 [connection signal="openxr_fb_scene_capture_completed" from="XROrigin3D/OpenXRFbSceneManager" to="." method="_scene_capture_completed"]
 [connection signal="openxr_fb_scene_data_missing" from="XROrigin3D/OpenXRFbSceneManager" to="." method="_scene_data_missing"]

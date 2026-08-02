@@ -15,13 +15,16 @@ class_name Main
 static var screens : Array[Rectangle3D] = [] 
 
 func addScreen(screen: Array) -> void:
+	print("MR DEBUG: addScreen")	
 	for s in screens:
 		if screen[0].is_equal_approx(s.bottomLeft) and screen[1].is_equal_approx(s.rightward) and screen[2].is_equal_approx(s.upward): 
+			print("MR DEBUG: duplicate")	
 			return
 	var rect := Rectangle3D.new()
 	rect.bottomLeft = screen[0]
 	rect.rightward = screen[1]
 	rect.upward = screen[2]
+	rect.visible = true
 	add_child(rect)
 	screens.append(rect)
 
@@ -66,7 +69,7 @@ func _ready():
 			print("MR DEBUG: CRITICAL - OpenXR interface found, but failed to initialize!")
 	else:
 		print("MR DEBUG: CRITICAL - No OpenXR interface found in XRServer!")
-	ctrl_right.button_pressed.connect(_on_button_pressed)
+	ctrl_left.button_pressed.connect(_on_button_pressed)
 
 func _on_openxr_session_begun():
 	get_viewport().use_xr = true
@@ -104,26 +107,31 @@ func _on_openxr_session_begun():
 		print("MR DEBUG: FAILED - Headset or settings denied passthrough.")
 	
 func _on_button_pressed(name: String):
-	# Press the "ax_button" (A button on right Quest controller)
 	if name == "menu_button":
 		print("DEBUG: Button pressed. Requesting scene capture NOW.")
-		#scene_manager.request_scene_capture()
-		scene_manager.create_scene_anchors()
+		_clear_screens()
+		scene_manager.request_scene_capture()
+		#scene_manager.create_scene_anchors()
 				
 func _scene_data_missing() -> void:
-	print("MR DEBUG; missing")
+	print("MR DEBUG: missing")
+	scene_manager.create_scene_anchors()
+	
+func _clear_screens() -> void:
+	for s in screens:
+		remove_child(s)
+	screens.clear()
 
 func _scene_capture_completed(success: bool) -> void:
 	if not success:
-		print("MR DEBUG: scene capture completed unsuccessful")
 		return
 	print("MR DEBUG: scene capture completed successful ",scene_manager.get_anchor_uuids().size())
-		
+	get_tree().reload_current_scene() 
 	if scene_manager.are_scene_anchors_created():
 		print("MR DEBUG: removing scene anchors")
-		scene_manager.remove_scene_anchors()
+		#scene_manager.remove_scene_anchors()
 	print("MR DEBUG: creating scene anchors")
-	scene_manager.create_scene_anchors()
+	#scene_manager.create_scene_anchors()
 
 func _process(_delta):
 	if not screens:
@@ -142,8 +150,6 @@ func _process_controller(ctrl: XRController3D, hand_id: String, cursor: MeshInst
 		if intersect.size() > 0:
 			if intersect[1] < best[1]:
 				best = intersect
-				cursor_left.global_position = s.bottomLeft
-				cursor_left.visible = true
 				
 	var msg = "LightgunData "+hand_id+" "
 	if best[1] < INF:
@@ -176,3 +182,6 @@ func _process_controller(ctrl: XRController3D, hand_id: String, cursor: MeshInst
 
 	msg += str(buttons_pressed)
 	print(msg)
+
+func _scene_anchor_created(scene_node: Node3D, entity: OpenXRFbSpatialEntity) -> void:
+	return
