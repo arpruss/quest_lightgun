@@ -1,0 +1,54 @@
+[gd_scene format=3 uid="uid://bp58a56hpgyao"]
+
+[ext_resource type="Script" uid="uid://c5c56ys6p060o" path="res://main.gd" id="1_ig7tw"]
+[ext_resource type="PackedScene" uid="uid://bcjp8kcgde4cs" path="res://scene_anchor.tscn" id="2_0xm2m"]
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_7dm0k"]
+top_radius = 0.002
+bottom_radius = 0.002
+height = 1.0
+
+[sub_resource type="SphereMesh" id="SphereMesh_0xm2m"]
+radius = 0.03
+height = 0.06
+
+[sub_resource type="SphereMesh" id="SphereMesh_h2yge"]
+radius = 0.03
+height = 0.06
+
+[node name="Main" type="Node3D" unique_id=1973510711 groups=["main_group"]]
+script = ExtResource("1_ig7tw")
+
+[node name="XROrigin3D" type="XROrigin3D" parent="." unique_id=563401135]
+
+[node name="XRCamera3D" type="XRCamera3D" parent="XROrigin3D" unique_id=1584506130]
+
+[node name="XRController3D_left" type="XRController3D" parent="XROrigin3D" unique_id=2019787229]
+tracker = &"left_hand"
+show_when_tracked = true
+
+[node name="RayLine" type="MeshInstance3D" parent="XROrigin3D/XRController3D_left" unique_id=2113522849]
+transform = Transform3D(1, 0, 0, 0, -4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, -0.5)
+mesh = SubResource("CylinderMesh_7dm0k")
+
+[node name="XRController3D_right" type="XRController3D" parent="XROrigin3D" unique_id=1408941687]
+tracker = &"right_hand"
+show_when_tracked = true
+
+[node name="RayLine" type="MeshInstance3D" parent="XROrigin3D/XRController3D_right" unique_id=101931351]
+transform = Transform3D(1, 0, 0, 0, -4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, -0.5)
+mesh = SubResource("CylinderMesh_7dm0k")
+skeleton = NodePath("../../XRController3D_left")
+
+[node name="OpenXRFbSceneManager" type="OpenXRFbSceneManager" parent="XROrigin3D" unique_id=2061331519]
+default_scene = ExtResource("2_0xm2m")
+
+[node name="CursorLeft" type="MeshInstance3D" parent="." unique_id=201946061]
+mesh = SubResource("SphereMesh_0xm2m")
+
+[node name="CursorRight" type="MeshInstance3D" parent="." unique_id=431031315]
+mesh = SubResource("SphereMesh_h2yge")
+
+[connection signal="openxr_fb_scene_anchor_created" from="XROrigin3D/OpenXRFbSceneManager" to="." method="_on_scene_anchor_created"]
+[connection signal="openxr_fb_scene_capture_completed" from="XROrigin3D/OpenXRFbSceneManager" to="." method="_scene_capture_completed"]
+[connection signal="openxr_fb_scene_data_missing" from="XROrigin3D/OpenXRFbSceneManager" to="." method="_scene_data_missing"]
