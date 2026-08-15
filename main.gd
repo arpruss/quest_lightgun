@@ -7,6 +7,7 @@ class_name Main
 @onready var xr_camera = $XROrigin3D/XRCamera3D
 @onready var ctrl_right: XRController3D = $XROrigin3D/XRController3D_right
 @onready var ctrl_left: XRController3D = $XROrigin3D/XRController3D_left
+@onready var node_right: Node3D = $XROrigin3D/XRController3D_right/ZForward/RightTransform
 
 @onready var screen_rect_mesh = $ActiveScreenRect
 @onready var cursor_left: MeshInstance3D = $CursorLeft
@@ -137,11 +138,11 @@ func _process(_delta):
 	if not screens:
 		return
 	#_process_controller(ctrl_left, "L", cursor_left)
-	_process_controller(ctrl_right, "R", cursor_right)
+	_process_controller(ctrl_right, node_right, "R", cursor_right)
 
-func _process_controller(ctrl: XRController3D, hand_id: String, cursor: MeshInstance3D):
-	var ray_origin = ctrl.global_position
-	var ray_dir = -ctrl.global_basis.z 
+func _process_controller(ctrl: XRController3D, node: Node3D, hand_id: String, cursor: MeshInstance3D):
+	var ray_origin = node.global_position
+	var ray_dir = node.global_basis.z 
 	
 	var best := [0,INF,Vector2(0.,0.)]
 	

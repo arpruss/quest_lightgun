@@ -36,10 +36,16 @@ mesh = SubResource("CylinderMesh_7dm0k")
 tracker = &"right_hand"
 show_when_tracked = true
 
-[node name="RayLine" type="MeshInstance3D" parent="XROrigin3D/XRController3D_right" unique_id=101931351]
-transform = Transform3D(1, 0, 0, 0, -4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, -0.5)
+[node name="ZForward" type="Node3D" parent="XROrigin3D/XRController3D_right" unique_id=1127238655]
+transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, 0, 0, 0)
+
+[node name="RightTransform" type="Node3D" parent="XROrigin3D/XRController3D_right/ZForward" unique_id=477948860]
+transform = Transform3D(0.98651755, 0.15992084, 0.03476177, -0.084925026, 0.6818188, -0.7265746, -0.13989568, 0.7138265, 0.6862075, 0.011, 0.003, 0.034)
+
+[node name="RayLine" type="MeshInstance3D" parent="XROrigin3D/XRController3D_right/ZForward/RightTransform" unique_id=101931351]
+transform = Transform3D(1, 0, 0, 0, -4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, 0.5)
 mesh = SubResource("CylinderMesh_7dm0k")
-skeleton = NodePath("../../XRController3D_left")
+skeleton = NodePath("../../../../XRController3D_left")
 
 [node name="OpenXRFbSceneManager" type="OpenXRFbSceneManager" parent="XROrigin3D" unique_id=2061331519]
 default_scene = ExtResource("2_0xm2m")
