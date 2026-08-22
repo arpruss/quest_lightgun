@@ -12,6 +12,18 @@ class_name Main
 @onready var screen_rect_mesh = $ActiveScreenRect
 @onready var cursor_left: MeshInstance3D = $CursorLeft
 @onready var cursor_right: MeshInstance3D = $CursorRight
+@onready var udp := PacketPeerUDP.new()
+@onready var outAddress := ""
+@onready var outPort := 0
+@onready var myIP : PackedByteArray
+const broadcastAddress := "224.0.0.1"
+var RECONNECT_TIME := 5.
+var READDRESS_TIME := 15.
+var lastAddressRequest := 0.
+var lastReconnect := 0.
+const SEND_PORT := 45128
+const RECEIVE_PORT := 45129
+const DEFAULT_ADDRESS := "" 
 
 static var screens : Array[Rectangle3D] = [] 
 
@@ -71,6 +83,77 @@ func _ready():
 	else:
 		print("MR DEBUG: CRITICAL - No OpenXR interface found in XRServer!")
 	ctrl_left.button_pressed.connect(_on_button_pressed)
+	
+	_multicast()
+				
+	_transmit(DEFAULT_ADDRESS, SEND_PORT)
+
+func _multicast() -> void:
+	var godot_singleton = Engine.get_singleton("AndroidRuntime")
+	if not godot_singleton:
+		print("MR DEBUG no Android singleton")
+		return
+	var godot_activity = godot_singleton.getActivity()
+	if godot_activity:
+		print("MR DEBUG godot_activity")
+		var context_class = JavaClassWrapper.wrap("android.content.Context")
+		var wifi_manager = godot_activity.getSystemService(context_class.WIFI_SERVICE)
+		if wifi_manager:
+			var lock = wifi_manager.createMulticastLock("godot_quest_lock")
+			lock.setReferenceCounted(false)
+			lock.acquire()
+			print("MR DEBUG acquiring multicast")
+	else:
+		print("MR DEBUG no godot_activity")
+	
+
+func get_network_data():
+	var ip_addresses := IP.get_local_addresses()
+	
+	for ip in ip_addresses:
+		# Exclude loopback (127.0.0.1), IPv6 addresses, and non-LAN addresses
+		if ip.is_valid_ip_address() and not ip.begins_with("127.") and not ip.contains(":"):
+			# Common local subnet prefixes
+			if ip.begins_with("192.168.") or ip.begins_with("10.") or ip.begins_with("172."):
+				print("MR DEBUG ip ", ip)
+				var parts := ip.split(".")
+				var bytes := PackedByteArray()
+				for part in parts:
+					bytes.append(part.to_int())
+				myIP = bytes
+				return
+				
+	myIP = PackedByteArray()
+
+func _transmit(address: String, port: int) -> void:
+	lastReconnect = Time.get_unix_time_from_system()
+	outAddress = address
+	outPort = port
+	print("MR DEBUG setting up network")
+	get_network_data()
+	if myIP.size() == 4:
+		udp.bind(RECEIVE_PORT)
+		if outAddress == "":
+			print("MR DEBUG enabling broadcast")
+			udp.set_broadcast_enabled(true)
+		else:
+			print("MR DEBUG disabling broadcast")
+			udp.set_broadcast_enabled(false)
+		var a := broadcastAddress if outAddress == "" else outAddress
+		#var resolved := IP.resolve_hostname(a, IP.TYPE_IPV4)
+		print("MR DEBUG sending to ", a, " ", outPort)
+		udp.set_dest_address(a, outPort)
+	
+func _sendData(hand: String, x: float, y: float, buttons: int) -> void:
+	if myIP.size() != 4:
+		if Time.get_unix_time_from_system() >= lastReconnect + RECONNECT_TIME:
+			print("MR DEBUG reconnecting")
+			_transmit(outAddress, outPort)
+			if myIP.size() != 4:
+				return
+			
+	var out := "QuestLightGun %d:%d:%d:%d %s %.5f %.5f %d" % [myIP[0],myIP[1],myIP[2],myIP[3], hand, x, y, buttons]
+	udp.put_packet(out.to_utf8_buffer())
 
 func _on_openxr_session_begun():
 	get_viewport().use_xr = true
@@ -116,6 +199,7 @@ func _on_button_pressed(name: String):
 				
 func _scene_data_missing() -> void:
 	print("MR DEBUG: missing")
+	_clear_screens()
 	scene_manager.create_scene_anchors()
 	
 func _clear_screens() -> void:
@@ -135,6 +219,20 @@ func _scene_capture_completed(success: bool) -> void:
 	#scene_manager.create_scene_anchors()
 
 func _process(_delta):
+	if udp.get_available_packet_count()>0:
+		var packet = udp.get_packet().get_string_from_utf8()
+		if packet.begins_with("QuestLightGunRequest "):
+			var s := packet.split(" ")
+			if s.size() > 1:
+				var a := s[1] 
+				if a != outAddress:
+					print("MR DEBUG: readdressing to ",a)
+					_transmit(a, SEND_PORT)
+			lastAddressRequest = Time.get_unix_time_from_system()
+	if outAddress != DEFAULT_ADDRESS and Time.get_unix_time_from_system() > lastAddressRequest + READDRESS_TIME:
+		print("MR DEBUG: readdressing to multicast")
+		_transmit(DEFAULT_ADDRESS, SEND_PORT)
+		
 	if not screens:
 		return
 	#_process_controller(ctrl_left, "L", cursor_left)
@@ -152,9 +250,13 @@ func _process_controller(ctrl: XRController3D, node: Node3D, hand_id: String, cu
 			if intersect[1] < best[1]:
 				best = intersect
 				
-	var msg = "LightgunData "+hand_id+" "
+	var msg = "LightGunData "+hand_id+" "
+	var x := -100000.
+	var y := -100000.
 	if best[1] < INF:
-		msg += "%.5f,%.5f " % [best[2].x, best[2].y]
+		x = best[2].x
+		y = best[2].y
+		msg += "%.5f,%.5f " % [x,y]
 		cursor.global_position = best[0]
 		cursor.visible = true
 	else:
@@ -183,6 +285,7 @@ func _process_controller(ctrl: XRController3D, node: Node3D, hand_id: String, cu
 
 	msg += str(buttons_pressed)
 	print(msg)
+	_sendData(hand_id, x, y, buttons_pressed)
 
 func _scene_anchor_created(scene_node: Node3D, entity: OpenXRFbSpatialEntity) -> void:
 	return
